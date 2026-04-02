@@ -1,8 +1,8 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo 🦅 Mahwous V27 Rebirth - Ultimate Sync Tool
-echo ------------------------------------------
+echo 🦅 Mahwous V27 Rebirth - Ultimate Sync Tool (Force Mode)
+echo --------------------------------------------------------
 
 :: Check for Git
 git --version >nul 2>&1
@@ -22,15 +22,15 @@ echo [2/4] Preparing Files...
 git add .
 
 echo [3/4] Recording Changes (Commit)...
-git commit -m "V27 Rebirth: Final Stable Release with Anti-Block and Link Library"
+git commit -m "🦅 V27 Rebirth: Final Stable Release"
 
-echo [4/4] Pushing to GitHub (This may ask for login)...
+echo [4/4] FORCE Pushing to GitHub...
 git branch -M master
-git push -u origin master
+git push -f origin master
 
 echo.
-echo ------------------------------------------
+echo --------------------------------------------------------
 echo ✅ DONE! Your code is now sync'd to GitHub.
 echo Railway should start building your app in a few seconds.
-echo ------------------------------------------
+echo --------------------------------------------------------
 pause
