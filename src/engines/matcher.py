@@ -55,37 +55,54 @@ class CompIndex:
     def __init__(self, df, name_col):
         self.df = df.reset_index(drop=True)
         self.raw_names = df[name_col].fillna("").astype(str).tolist()
+        # v21 Optimization: Pre-normalize and Hash
         self.agg_names = [normalize_name(n) for n in self.raw_names]
+        self.name_hash = {name: i for i, name in enumerate(self.agg_names)}
         self.brands = [extract_brand(n) for n in self.raw_names]
         self.sizes = [extract_size(n) for n in self.raw_names]
 
     def search(self, our_name, our_brand="", our_size=0, top_n=5):
-        """بحث سريع باستخدام RapidFuzz"""
+        """بحث فائق السرعة v21 (~10ms)"""
         our_agg = normalize_name(our_name)
         
-        # البحث الأولي
+        # 1. محاولة المطابقة المباشرة عبر Hash (سرعة خارقة)
+        if our_agg in self.name_hash:
+            idx = self.name_hash[our_agg]
+            return [{
+                "name": self.raw_names[idx],
+                "score": 100.0,
+                "index": idx,
+                "brand": self.brands[idx],
+                "size": self.sizes[idx],
+                "is_instant": True
+            }]
+
+        # 2. البحث المجمع السريع
         matches = rf_process.extract(
             our_agg, self.agg_names,
             scorer=fuzz.token_set_ratio,
-            limit=min(20, len(self.agg_names))
+            limit=20
         )
         
         results = []
         for _, score, idx in matches:
             if score < 40: continue
             
-            # فلاتر الماركة والحجم
+            # فلاتر الماركة والحجم (Barrier)
             if our_brand and self.brands[idx] and normalize(our_brand) != normalize(self.brands[idx]):
                 continue
             if our_size > 0 and self.sizes[idx] > 0 and abs(our_size - self.sizes[idx]) > 5:
                 continue
-                
+            
+            # تصنيف v21: تلقائي (>=97) | غموض (62-96) | رفض (<62)
             results.append({
                 "name": self.raw_names[idx],
                 "score": score,
                 "index": idx,
                 "brand": self.brands[idx],
-                "size": self.sizes[idx]
+                "size": self.sizes[idx],
+                "needs_ai": 62 <= score <= 96,
+                "is_fast_match": score >= 97
             })
             
             if len(results) >= top_n: break

@@ -77,6 +77,10 @@ class MissingFinder:
                 "status": "missing",
                 "normalized_name": "",
                 "seo_description": "",
+                "top_notes": "",
+                "heart_notes": "",
+                "base_notes": "",
+                "sensory_description": "",
             }
             missing_entries.append(entry)
             
@@ -89,13 +93,32 @@ class MissingFinder:
         return pd.DataFrame(missing_entries)
 
     def normalize_missing_names(self, missing_df, progress_callback=None):
-        """تنسيق الأسماء بـ AI المزدوج (نفضل Anthropic)"""
+        """تنسيق الأسماء جلب بيانات فراجرانتيكا بالذكاء الاصطناعي"""
         total = len(missing_df)
         for idx, row in missing_df.iterrows():
+            # 1. تنسيق الاسم
             if not row['normalized_name']:
                 norm_name = ai.normalize_name(row['comp_name'])
                 if norm_name:
                     missing_df.at[idx, 'normalized_name'] = norm_name
+            
+            # 2. جلب بيانات فراجرانتيكا (مكونات وصور)
+            target_name = missing_df.at[idx, 'normalized_name'] or row['comp_name']
+            frag_data = ai.get_fragrantica_details(target_name)
+            if frag_data:
+                missing_df.at[idx, 'top_notes'] = frag_data.get('top_notes', '')
+                missing_df.at[idx, 'heart_notes'] = frag_data.get('heart_notes', '')
+                missing_df.at[idx, 'base_notes'] = frag_data.get('base_notes', '')
+                missing_df.at[idx, 'sensory_description'] = frag_data.get('description', '')
+                # تحديث الصورة بصورة فراجرانتيكا إذا كانت أفضل
+                if frag_data.get('image_url') and not row['comp_image']:
+                    missing_df.at[idx, 'comp_image'] = frag_data['image_url']
+            
+            # 3. جلب الوصف السيو المطور
+            if not row['seo_description']:
+                seo_desc = ai.generate_seo_description(f"{target_name} | {frag_data}")
+                missing_df.at[idx, 'seo_description'] = seo_desc
+
             if progress_callback:
                 progress_callback((idx + 1) / total)
         return missing_df

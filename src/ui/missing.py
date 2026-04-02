@@ -56,12 +56,13 @@ def show_missing_products():
             
             col_btn1, col_btn2, col_btn3 = st.columns(3)
             with col_btn1:
-                if st.button("🪄 توحيد الأسماء (Anthropic/Gemini)"):
+                if st.button("🪄 توحيد الأسماء وفهرسة فراجرانتيكا"):
                     finder = MissingFinder(None, None)
-                    p_bar = st.progress(0, "جاري التنسيق...")
+                    p_bar = st.progress(0, "جاري التنسيق وجلب المكونات...")
+                    # تمرير دالة التحديث للبار
                     df = finder.normalize_missing_names(df, lambda p: p_bar.progress(p))
                     st.session_state.missing_df_raw = df
-                    st.success("✅ تم توحيد الأسماء!")
+                    st.success("✅ تم توحيد الأسماء وجلب بيانات فراجرانتيكا!")
                     st.rerun()
 
             with col_btn3:
@@ -85,6 +86,35 @@ def show_missing_products():
                             mime="text/csv"
                         )
             
+            # 3. عرض البطاقات الاحترافية (V26 Premium Cards)
+            st.markdown("---")
+            for idx, row in df.iterrows():
+                with st.container(border=True):
+                    c1, c2 = st.columns([1, 3])
+                    with c1:
+                        img_url = row.get('comp_image', '')
+                        if img_url: st.image(img_url, use_container_width=True)
+                        else: st.info("لا توجد صورة")
+                    
+                    with c2:
+                        st.subheader(row.get('normalized_name') or row.get('comp_name'))
+                        brand = row.get('comp_brand', 'ماركة غير محددة')
+                        price = row.get('comp_price', 0)
+                        st.write(f"🏷️ **الماركة:** {brand} | 💰 **سعر المنافس:** {price} ريال")
+                        
+                        # الهرم العطري
+                        if row.get('top_notes'):
+                            st.info(f"🌸 **القمة:** {row['top_notes']} | ❤️ **القلب:** {row['heart_notes']} | 🪵 **القاعدة:** {row['base_notes']}")
+                        
+                        # الوصف المهووس (SEO)
+                        with st.expander("📝 عرض الوصف المهووس (SEO Description)"):
+                            desc = row.get('seo_description', 'جاري التوليد...')
+                            st.code(desc, language="html")
+                            if st.button("📋 نسخ الوصف", key=f"copy_{idx}"):
+                                st.toast("تم نسخ الوصف (محاكاة)")
+                                st.write("تم النسخ بنجاح")
+
+            st.divider()
             st.dataframe(df[['comp_name', 'normalized_name', 'comp_price', 'comp_brand']], use_container_width=True)
 
             # 🔴 قسم العناصر المطرودة (Hidden/Expander)

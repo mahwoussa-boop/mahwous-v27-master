@@ -65,3 +65,26 @@ class SallaExporter:
         output = io.StringIO()
         export_df.to_csv(output, index=False, encoding="utf-8-sig")
         return output.getvalue()
+
+    def build_make_payload(self, results_df):
+        """بناء الحمولة المتطابقة تماماً مع تنسيق مهووس V26 لـ Make.com"""
+        products = []
+        for _, row in results_df.iterrows():
+            product = {
+                "product_no": str(row.get("no", "0")), # رقم المنتج من ملف مهووس
+                "name": row.get("name", "غير معروف"),
+                "current_price": float(row.get("price", 0)),
+                "new_price": float(row.get("comp_price", 0)),
+                "diff": float(row.get("price", 0)) - float(row.get("comp_price", 0)),
+                "competitor": row.get("competitor", "منافس"),
+                "brand": row.get("brand", ""),
+                "match_confidence": float(row.get("match_score", 100))
+            }
+            products.append(product)
+        
+        from datetime import datetime
+        return {
+            "products": products,
+            "timestamp": datetime.now().isoformat(),
+            "total": len(products)
+        }

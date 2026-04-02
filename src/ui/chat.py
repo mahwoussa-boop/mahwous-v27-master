@@ -14,18 +14,28 @@ def show_chat_ui():
         higher = len(df[df['status'] == 'higher'])
         context_info = f"\nسياق البيانات الحالي: لديك {total} منتج محلل. {lower} منتج سعرنا أقل، {higher} منتج سعرنا أعلى."
 
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [
-            {"role": "assistant", "content": "أهلاً بك يا بطل! أنا خبير مبيعات مهووس. لقد فحصت بياناتك وأنا مستعد لمساعدتك في اكتساح السوق. ماذا تريد أن نحلل اليوم؟"}
-        ]
+    # عرض التاريخ بتنسيق جميل (بحد أقصى 15 رسالة للحفاظ على السياق)
+    if len(st.session_state.chat_history) > 16:
+        st.session_state.chat_history = st.session_state.chat_history[-16:]
 
-    # عرض التاريخ بتنسيق جميل
     for msg in st.session_state.chat_history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
+    # 3. الأزرار السريعة (V26 Style)
+    st.markdown("---")
+    c1, c2, c3, c4 = st.columns(4)
+    quick_prompt = None
+    if c1.button("📑 ملخص الوضع", use_container_width=True): quick_prompt = "أعطني ملخصاً بيانياً واحترافياً لوضعي التنافسي الحالي."
+    if c2.button("🎯 أكبر الفرص", use_container_width=True): quick_prompt = "ما هي أكبر 5 فرص لزيادة المبيعات الآن؟"
+    if c3.button("📦 سد الفجوات", use_container_width=True): quick_prompt = "حلل المنتجات المفقودة واقترح خطة لطلبها."
+    if c4.button("🧠 منطق التسعير", use_container_width=True): quick_prompt = "اشرح لي المنطق النفسي المتبع في تسعير العطور الفاخرة."
+
     # المدخلات
-    if prompt := st.chat_input("اسأل خبير مهووس..."):
+    prompt = st.chat_input("اسأل خبير مهووس...")
+    if quick_prompt: prompt = quick_prompt
+
+    if prompt:
         with st.chat_message("user"):
             st.markdown(prompt)
         st.session_state.chat_history.append({"role": "user", "content": prompt})

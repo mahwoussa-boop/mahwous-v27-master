@@ -32,6 +32,7 @@ with st.sidebar:
         "🔍 تحليل المنافسين": "competitors",
         "🕸️ الكشط الذكي": "scraper",
         "📦 المفقودات": "missing",
+        "🪄 أدوات الذكاء الاصطناعي": "ai_tools",
         "🛠️ التدقيق والتحسين": "audit",
         "🤖 المحادثة الذكية": "chat",
         "⚙️ الإعدادات": "settings"
@@ -66,6 +67,9 @@ def main():
     elif page == "🤖 المحادثة الذكية":
         from src.ui.chat import show_chat_ui
         show_chat_ui()
+    elif page == "🪄 أدوات الذكاء الاصطناعي":
+        from src.ui.ai_tools import show_ai_tools_ui
+        show_ai_tools_ui()
     elif page == "🛠️ التدقيق والتحسين":
         from src.ui.audit import show_audit_ui
         show_audit_ui()

@@ -2,7 +2,11 @@ import json
 import requests
 import time
 from ..utils.mahwous_logging import get_logger
-from .prompts import SYSTEM_MATCH_VERIFIER, SYSTEM_PRICING_EXPERT, SYSTEM_SEO_EXPERT, SYSTEM_NAME_NORMALIZER
+from .prompts import (
+    SYSTEM_MATCH_VERIFIER, SYSTEM_PRICING_EXPERT, SYSTEM_SEO_EXPERT, 
+    SYSTEM_NAME_NORMALIZER, SYSTEM_MARKET_RESEARCHER, SYSTEM_PASTE_ANALYZER,
+    SYSTEM_FRAGRANTICA_RESEARCHER
+)
 from config import GEMINI_API_KEYS, ANTHROPIC_API_KEY
 
 _logger = get_logger(__name__)
@@ -102,6 +106,18 @@ class AICore:
 
     def generate_seo_description(self, product_details):
         return self.call_ai(product_details, SYSTEM_SEO_EXPERT, response_type="text", prefer_anthropic=True)
+
+    def search_market_price(self, product_name):
+        """إجراء بحث سوقي شامل وجلب الأسعار الحقيقية"""
+        return self.call_ai(product_name, SYSTEM_MARKET_RESEARCHER, response_type="json")
+
+    def analyze_pasted_data(self, raw_text):
+        """تحليل النصوص المنسوخة من إكسيل وتحويلها لجدول منظم"""
+        return self.call_ai(raw_text, SYSTEM_PASTE_ANALYZER, response_type="json")
+
+    def get_fragrantica_details(self, perfume_name):
+        """جلب تفاصيل المكونات والصورة من فراجرانتيكا عبر AI"""
+        return self.call_ai(perfume_name, SYSTEM_FRAGRANTICA_RESEARCHER, response_type="json")
 
 # تصدير الكائن الافتراضي
 ai = AICore()
